@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--m', type=float, default=0.05, help='Margin for prototype learning') #unused in our paper
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu", type=str, help="Device to use for projection (cuda or cpu)")
     parser.add_argument('--dropout', type=float, default=0)
+    parser.add_argument('--loss_type', type=str, choices=['bce', 'focal'], default='bce', help='Feature-extractor loss: bce (baseline) or focal (uncertainty experiment)')
     parser.add_argument('--checkpoint_dir', type=str, default='/gpfs/data/bbj-lab/users/sethis/experiments/checkpoints')
     parser.add_argument('--log_dir', type=str, default='/gpfs/data/bbj-lab/users/sethis/experiments/logs')
     parser.add_argument('--test_dir', type=str, default='/gpfs/data/bbj-lab/users/sethis/experiments/test_results')
@@ -71,6 +72,10 @@ if __name__ == '__main__':
     parser.add_argument('--remove_baseline', type=str2bool, default=True, help='Whether to remove baseline wander from input ECG signals (high-pass filter)')
     parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
     parser.add_argument('--num_workers', type=int, default=0, help='Number of workers for dataloader')
+    parser.add_argument('--sample_weights_path', type=str, default=None)
+    parser.add_argument('--weight_clst', type=str2bool, default=False)
+    parser.add_argument('--weight_sep', type=str2bool, default=False)
+    parser.add_argument('--weight_bce', type=str2bool, default=False)
 
     parser.add_argument('--scheduler_type', type=str, choices=['ReduceLROnPlateau', 'CosineAnnealingLR', 'CyclicLR'],
                     default='ReduceLROnPlateau', help="Type of learning rate scheduler to use")
@@ -113,7 +118,7 @@ if __name__ == '__main__':
     else:
         num_classes = len(label_mappings[args.label_set])
 
-    if args.training_stage == "projection":
+    if args.training_stage == "projection" or args.sample_weights_path:
         return_sample_ids=True
     else: 
         return_sample_ids=False
@@ -169,7 +174,7 @@ if __name__ == '__main__':
     # Train or test model
     if args.test_model:
         test_model(model, test_loader, args=args)
-    elif args.training_stage == "projection":
+    elif args.training_stage == "projection" or args.sample_weights_path:
         trainer = train_model(model, train_loader, val_loader, args, class_wts)
     elif args.training_stage == "fusion":
         label_map = load_fusion_label_mappings()

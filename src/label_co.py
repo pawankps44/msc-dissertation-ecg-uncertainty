@@ -9,7 +9,7 @@ train_loader, _, _, _ = get_dataloaders(
         batch_size=128, 
         mode='1D',
         sampling_rate=100, 
-        label_set="3",
+        label_set="1",
         work_num=4,
         return_sample_ids=False,
         custom_groups=True, 
@@ -36,6 +36,6 @@ def compute_label_cooccurrence_matrix(Y, method="jaccard"):
     return cooc
 
 cooc = compute_label_cooccurrence_matrix(all_labels)
-save_path = os.path.join('/gpfs/data/bbj-lab/users/sethis/experiments/preprocessing', "label_cooccur_Cat3.pt")
+save_path = os.path.join('/home/psxpk7/protoecgnet/experiments/preprocessing', "label_cooccur_Cat1.pt")
 torch.save(torch.tensor(cooc, dtype=torch.float32), save_path)
 print(f"Label co-occurence matrix saved to: {save_path}")

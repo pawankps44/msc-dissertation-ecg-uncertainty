@@ -12,8 +12,8 @@ from scipy.signal import butter, filtfilt
 
 # FILE PATHS TO CHANGE
 # HPC
-DATASET_PATH = "/gpfs/data/bbj-lab/users/sethis/physionet.org/files/ptb-xl/1.0.3"
-STANDARDIZATION_PATH = '/gpfs/data/bbj-lab/users/sethis/experiments/preprocessing'
+DATASET_PATH = "/data/psxpk7/ptb-xl"
+STANDARDIZATION_PATH = "/data/psxpk7/ptb-xl/standardized"
 SCP_GROUP_PATH = "scp_statementsRegrouped2.csv"
 
 def remove_baseline_wander(X, sampling_rate=100, cutoff=0.5, order=1):

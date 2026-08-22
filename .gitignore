@@ -1,0 +1,12 @@
+experiments/
+data/
+physionet.org/
+*.ckpt
+*.pth
+*.pt
+*.npz
+*.npy
+*.out
+*.log
+__pycache__/
+*.pyc

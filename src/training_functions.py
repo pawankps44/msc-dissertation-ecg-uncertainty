@@ -17,7 +17,18 @@ import torch.nn.functional as F
 import itertools
 from collections import defaultdict
 
-
+def focal_bce_loss(logits, targets, pos_weight=None, gamma=2.0):
+    """Confidence-aware loss: down-weights easy/over-confident predictions,
+    focuses on uncertain/hard cases. Drop-in replacement for BCE."""
+    if pos_weight is not None:
+        pos_weight = pos_weight.to(logits.device)
+    targets = targets.to(logits.device)
+    bce = F.binary_cross_entropy_with_logits(logits, targets, pos_weight=pos_weight, reduction='none')
+    p = torch.sigmoid(logits)
+    p_t = p * targets + (1 - p) * (1 - targets)   # predicted prob of the TRUE class
+    focal_factor = (1 - p_t) ** gamma
+    return (focal_factor * bce).mean()
+    
 def get_class_names(args):
     from ecg_utils import load_label_mappings
 
@@ -69,6 +80,14 @@ class ECGTrainer(pl.LightningModule):
         self.args = args
         self.is_proto = isinstance(model, (ProtoECGNet1D, ProtoECGNet2D, FusionProtoClassifier))
         self.class_weights = class_weights.to(self.device) if class_weights is not None else None
+        self.wdict={}
+        if getattr(self.args,'sample_weights_path',None):
+            _d=__import__('numpy').load(self.args.sample_weights_path)
+            self.wdict={int(a):float(b) for a,b in zip(_d['ecg_id'],_d['weight'])}
+        self.model._cur_w=None
+        self.model._weight_clst=getattr(self.args,'weight_clst',False)
+        self.model._weight_sep=getattr(self.args,'weight_sep',False)
+        self.model._weight_bce=getattr(self.args,'weight_bce',False)
 
         if self.args.training_stage in ["classifier", "fusion"]:
             self.criterion = lambda logits, y, *_: torch.nn.BCEWithLogitsLoss(pos_weight=self.class_weights.to(logits.device) if class_weights is not None else None)(logits, y.to(logits.device)) + self.args.l1 * self.compute_l1_loss()
@@ -100,7 +119,10 @@ class ECGTrainer(pl.LightningModule):
                 class_weights=self.class_weights
             )
         else:  # Feature extractor training
-            self.criterion = torch.nn.BCEWithLogitsLoss(pos_weight=self.class_weights)
+            if getattr(self.args, 'loss_type', 'bce') == 'focal':
+                self.criterion = lambda logits, y: focal_bce_loss(logits, y, pos_weight=self.class_weights)
+            else:
+                self.criterion = torch.nn.BCEWithLogitsLoss(pos_weight=self.class_weights)
     
         self.train_preds, self.train_labels = [], []
         self.val_preds, self.val_labels = [], []
@@ -131,7 +153,11 @@ class ECGTrainer(pl.LightningModule):
         return logits, distances, similarity_scores
     
     def training_step(self, batch):
-        x, y = batch
+        if len(batch)==3:
+            x, y, _ids = batch
+            self.model._cur_w = __import__('torch').tensor([self.wdict.get(int(_i),1.0) for _i in _ids], dtype=__import__('torch').float32) if self.wdict else None
+        else:
+            x, y = batch
         if isinstance(y, dict):
             y = y["full"] # extract full labels for fusion classifier training
 
@@ -177,7 +203,11 @@ class ECGTrainer(pl.LightningModule):
         self.train_preds, self.train_labels = [], []  # Reset storage
 
     def validation_step(self, batch):
-        x, y = batch
+        if len(batch)==3:
+            x, y, _ids = batch
+        else:
+            x, y = batch
+        self.model._cur_w = None
         if isinstance(y, dict):
             y = y["full"] # extract full labels for fusion classifier training
         output = self.model(x)
@@ -218,7 +248,11 @@ class ECGTrainer(pl.LightningModule):
         self.val_preds, self.val_labels = [], []  # Reset storage
 
     def test_step(self, batch):
-        x, y = batch
+        if len(batch)==3:
+            x, y, _ids = batch
+        else:
+            x, y = batch
+        self.model._cur_w = None
         if isinstance(y, dict):
             y = y["full"] # extract full labels for fusion classifier training
 

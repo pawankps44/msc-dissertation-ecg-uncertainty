@@ -38,10 +38,19 @@ def prototype_loss1d(logits, y_true, model, similarity_scores, class_weights,
     incorrect_class_prototype_activations, _ = torch.max(similarity_scores.unsqueeze(-1) * prototypes_of_wrong_class, dim=1)
 
     # Clustering Loss (Encourage correct prototypes to activate)
-    clst_loss = -torch.mean(correct_class_prototype_activations)
+    _sw=getattr(model,'_cur_w',None); _wc=getattr(model,'_weight_clst',False); _ws=getattr(model,'_weight_sep',False); _wb=getattr(model,'_weight_bce',False)
+    if _wc and _sw is not None:
+        _w=_sw.to(device).view(-1,1)
+        clst_loss = -(_w*correct_class_prototype_activations).sum()/(_w.sum()*correct_class_prototype_activations.shape[1]+1e-9)
+    else:
+        clst_loss = -torch.mean(correct_class_prototype_activations)
 
     # Separation Loss (Encourage incorrect prototypes to be inactive)
-    sep_loss = torch.mean(incorrect_class_prototype_activations)
+    if _ws and _sw is not None:
+        _w=_sw.to(device).view(-1,1)
+        sep_loss = (_w*incorrect_class_prototype_activations).sum()/(_w.sum()*incorrect_class_prototype_activations.shape[1]+1e-9)
+    else:
+        sep_loss = torch.mean(incorrect_class_prototype_activations)
 
     # Sparsity Loss (Encourage fewer prototype activations per input); unused in our paper
     spars_loss = torch.mean(torch.clamp(similarity_scores, min=0).sum(dim=1))
@@ -83,7 +92,12 @@ def prototype_loss1d(logits, y_true, model, similarity_scores, class_weights,
 
 
     # Multi-label Classification Loss
-    classification_loss = F.binary_cross_entropy_with_logits(logits, y_true, pos_weight=class_weights)
+    if _wb and _sw is not None:
+        _perbce = F.binary_cross_entropy_with_logits(logits, y_true, pos_weight=class_weights, reduction='none')
+        _wv = _sw.to(device).view(-1, 1)
+        classification_loss = (_wv * _perbce).sum() / (_wv.sum() * _perbce.shape[1] + 1e-9)
+    else:
+        classification_loss = F.binary_cross_entropy_with_logits(logits, y_true, pos_weight=class_weights)
 
     print(f"Class loss: {classification_loss}")
     print(f"Clst loss: {lam_clst*clst_loss}")
@@ -125,7 +139,7 @@ class ProtoECGNet1D(nn.Module):
         try:
             if self.custom_groups:
                 if self.label_set == "1":
-                    path = "/gpfs/data/bbj-lab/users/sethis/experiments/preprocessing/label_cooccur_Cat1.pt"
+                    path = "/home/psxpk7/protoecgnet/experiments/preprocessing/label_cooccur_Cat1.pt"
                 elif self.label_set == "3":
                     path = "/gpfs/data/bbj-lab/users/sethis/experiments/preprocessing/label_cooccur_Cat3.pt"
                 elif self.label_set == "4":

@@ -163,6 +163,7 @@ class ResNet1D(nn.Module):
         self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
         self.avgpool = nn.AdaptiveAvgPool1d(1)
+        self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(512 * block.expansion, num_classes)
     
     def _make_layer(self, block, planes, blocks, stride=1):
@@ -189,6 +190,7 @@ class ResNet1D(nn.Module):
         x = self.layer4(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
+        x = self.dropout(x)
         x = self.fc(x)
         return x
 
