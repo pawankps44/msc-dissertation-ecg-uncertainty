@@ -285,8 +285,8 @@ def push_prototypes1d(model, dataloader, save_dir, label_set, job_name, logger=N
     model.eval()
 
     label_mappings = load_label_mappings(custom_groups=custom_groups,
-                                prototype_category=None if not custom_groups else int(label_set))
-    label_set_names = label_mappings["custom"] if custom_groups else label_mappings[label_set]
+                                prototype_category=None if not custom_groups else (int(label_set) if str(label_set).isdigit() else 1))
+    label_set_names = (__import__("ecg_utils_chapman").CHAPMAN_CLASSES if label_set == "chapman" else (label_mappings["custom"] if custom_groups else label_mappings[label_set]))
 
     label_mapping = {i: label_set_names[i] for i in range(len(label_set_names))}
 
@@ -433,8 +433,8 @@ def push_prototypes2d(model, dataloader, save_dir, label_set, job_name, logger=N
     model.eval()
 
     label_mappings = load_label_mappings(custom_groups=custom_groups,
-                                prototype_category=None if not custom_groups else int(label_set))
-    label_set_names = label_mappings["custom"] if custom_groups else label_mappings[label_set]
+                                prototype_category=None if not custom_groups else (int(label_set) if str(label_set).isdigit() else 1))
+    label_set_names = (__import__("ecg_utils_chapman").CHAPMAN_CLASSES if label_set == "chapman" else (label_mappings["custom"] if custom_groups else label_mappings[label_set]))
 
     label_mapping = {i: label_set_names[i] for i in range(len(label_set_names))}
 

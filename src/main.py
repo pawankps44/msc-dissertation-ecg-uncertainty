@@ -64,7 +64,7 @@ if __name__ == '__main__':
     parser.add_argument('--single_class_prototype_per_class', type=int, default=5)
     parser.add_argument('--joint_prototypes_per_border', type=int, default=0) #not used in our paper
     parser.add_argument('--sampling_rate', type=int, choices=[100, 500], required=True) #we use 100 Hz
-    parser.add_argument('--label_set', type=str, choices=['superdiagnostic', 'subdiagnostic', 'all', 'diagnostic', 'form', 'rhythm', '1', '2', '3', '4'], default='superdiagnostic')
+    parser.add_argument('--label_set', type=str, choices=['superdiagnostic', 'subdiagnostic', 'all', 'diagnostic', 'form', 'rhythm', '1', '2', '3', '4', 'chapman', 'georgia'], default='superdiagnostic')
     parser.add_argument('--test_model', type=str2bool, default=False, help='Flag to of whether to skip training and just test the model')
     parser.add_argument('--save_weights', type=str2bool, default=True, help='Flag to save model weights after training')
     parser.add_argument('--custom_groups', type=str2bool, default=False, help='Flag to use custom label groupings')
@@ -76,6 +76,7 @@ if __name__ == '__main__':
     parser.add_argument('--weight_clst', type=str2bool, default=False)
     parser.add_argument('--weight_sep', type=str2bool, default=False)
     parser.add_argument('--weight_bce', type=str2bool, default=False)
+    parser.add_argument('--dataset', type=str, default='ptbxl')
 
     parser.add_argument('--scheduler_type', type=str, choices=['ReduceLROnPlateau', 'CosineAnnealingLR', 'CyclicLR'],
                     default='ReduceLROnPlateau', help="Type of learning rate scheduler to use")
@@ -107,16 +108,22 @@ if __name__ == '__main__':
     seed_everything(args.seed)
     
     # Determine number of classes
-    print("Loading label mappings...")
-    label_mappings = load_label_mappings(
-        custom_groups=args.custom_groups,
-        prototype_category=int(args.label_set) if args.custom_groups else None
-    )
-
-    if args.custom_groups:
-        num_classes = len(label_mappings["custom"])
+    if args.dataset == 'chapman':
+        from ecg_utils_chapman import CHAPMAN_CLASSES
+        num_classes = len(CHAPMAN_CLASSES)
+    elif args.dataset == 'georgia':
+        from ecg_utils_georgia import GEORGIA_CLASSES
+        num_classes = len(GEORGIA_CLASSES)
     else:
-        num_classes = len(label_mappings[args.label_set])
+        print("Loading label mappings...")
+        label_mappings = load_label_mappings(
+            custom_groups=args.custom_groups,
+            prototype_category=int(args.label_set) if args.custom_groups else None
+        )
+        if args.custom_groups:
+            num_classes = len(label_mappings["custom"])
+        else:
+            num_classes = len(label_mappings[args.label_set])
 
     if args.training_stage == "projection" or args.sample_weights_path:
         return_sample_ids=True
@@ -127,7 +134,14 @@ if __name__ == '__main__':
     if args.training_stage != 'fusion':
         print(f"Loading data (num_workers: {args.num_workers})...")
 
-        train_loader, val_loader, test_loader, class_weights = get_dataloaders(
+        if args.dataset == 'chapman':
+            from ecg_utils_chapman import get_chapman_dataloaders
+            train_loader, val_loader, test_loader, class_weights = get_chapman_dataloaders(batch_size=args.batch_size, work_num=args.num_workers, return_sample_ids=return_sample_ids, remove_baseline=args.remove_baseline, seed=args.seed)
+        elif args.dataset == 'georgia':
+            from ecg_utils_georgia import get_georgia_dataloaders
+            train_loader, val_loader, test_loader, class_weights = get_georgia_dataloaders(batch_size=args.batch_size, work_num=args.num_workers, return_sample_ids=return_sample_ids, remove_baseline=args.remove_baseline, seed=args.seed)
+        else:
+            train_loader, val_loader, test_loader, class_weights = get_dataloaders(
             batch_size=args.batch_size, 
             mode=args.dimension,
             sampling_rate=args.sampling_rate, 

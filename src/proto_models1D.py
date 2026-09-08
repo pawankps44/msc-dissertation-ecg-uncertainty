@@ -140,6 +140,10 @@ class ProtoECGNet1D(nn.Module):
             if self.custom_groups:
                 if self.label_set == "1":
                     path = "/home/psxpk7/protoecgnet/experiments/preprocessing/label_cooccur_Cat1.pt"
+                elif self.label_set == "chapman":
+                    path = "/home/psxpk7/protoecgnet/experiments/preprocessing/label_cooccur_chapman.pt"
+                elif self.label_set == "georgia":
+                    path = "/home/psxpk7/protoecgnet/experiments/preprocessing/label_cooccur_georgia.pt"
                 elif self.label_set == "3":
                     path = "/gpfs/data/bbj-lab/users/sethis/experiments/preprocessing/label_cooccur_Cat3.pt"
                 elif self.label_set == "4":

@@ -30,6 +30,12 @@ def focal_bce_loss(logits, targets, pos_weight=None, gamma=2.0):
     return (focal_factor * bce).mean()
     
 def get_class_names(args):
+    if getattr(args, 'dataset', 'ptbxl') == 'chapman':
+        from ecg_utils_chapman import CHAPMAN_CLASSES
+        return CHAPMAN_CLASSES
+    if getattr(args, 'dataset', 'ptbxl') == 'georgia':
+        from ecg_utils_georgia import GEORGIA_CLASSES
+        return GEORGIA_CLASSES
     from ecg_utils import load_label_mappings
 
     label_mappings = load_label_mappings(
