@@ -50,7 +50,7 @@ def mc_run(model,loader):
             outs.append(np.concatenate(p))
     return np.stack(outs)
 def labels_of(loader): return np.concatenate([b[1].numpy() for b in loader]).astype(float)
-_, val_loader, test_loader, _ = get_georgia_dataloaders(batch_size=32, work_num=4, return_sample_ids=False)
+_, val_loader, test_loader, _ = get_georgia_dataloaders(batch_size=32, work_num=4, return_sample_ids=False,seed=7)
 y_val=labels_of(val_loader); y_test=labels_of(test_loader)
 def load_model(job):
     ck=best_ckpt(job)

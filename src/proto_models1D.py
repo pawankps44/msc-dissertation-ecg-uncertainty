@@ -101,7 +101,7 @@ def prototype_loss1d(logits, y_true, model, similarity_scores, class_weights,
 
     print(f"Class loss: {classification_loss}")
     print(f"Clst loss: {lam_clst*clst_loss}")
-    print(f"Sep loss: {lam_sep*spars_loss}")
+    print(f"Sep loss: {lam_sep*sep_loss}")
     print(f"Spars loss: {lam_spars*spars_loss}")
     print(f"Div loss: {lam_div*div_loss}")
     print(f"Cnrst loss: {lam_cnrst*cnrst_loss}")

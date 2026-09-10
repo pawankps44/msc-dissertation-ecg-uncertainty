@@ -11,7 +11,8 @@ set -e
 source ~/ecg_venv/bin/activate
 cd ~/protoecgnet/src
 
-DATASET=$1; EXP=$2
+DATASET=$1; EXP=$2; SEED=${3:-42}
+SUF=""; [ "$SEED" != "42" ] && SUF=_s${SEED}
 CK=$HOME/protoecgnet/experiments/checkpoints
 LG=$HOME/protoecgnet/experiments/logs
 TS=$HOME/protoecgnet/experiments/test_results
@@ -29,15 +30,18 @@ CALIB=calibration_eval_${DATASET}.py; [ "$DATASET" = "ptbxl" ] && CALIB=calibrat
 FEATDIR=${DATASET}_feat;              [ "$DATASET" = "ptbxl" ] && FEATDIR=cat1_feat_baseline
 WEIGHTS=$PP/${DATASET}_train_weights.npz; [ "$DATASET" = "ptbxl" ] && WEIGHTS=$PP/train_uncertainty_weights.npz
 
-BASE="--dimension 1D --backbone resnet1d18 --sampling_rate 100 $DS --dropout 0.35 --num_workers 4 --save_weights True --checkpoint_dir $CK --log_dir $LG --test_dir $TS --seed 42"
+BASE="--dimension 1D --backbone resnet1d18 --sampling_rate 100 $DS --dropout 0.35 --num_workers 4 --save_weights True --checkpoint_dir $CK --log_dir $LG --test_dir $TS --seed $SEED"
 PROTO="--single_class_prototype_per_class 6 --joint_prototypes_per_border 0 --proto_time_len 32 --proto_dim 512"
 
 case "$EXP" in
   prep)  python "$PREP" ;;
   calib) python "$CALIB" ;;
   standard|bce)
-     TAG=${DATASET}_${EXP}
-     WF=""; [ "$EXP" = "bce" ] && WF="--sample_weights_path $WEIGHTS --weight_bce True"
+     TAG=${DATASET}_${EXP}${SUF}
+     if [ "$EXP" = "bce" ] && [ ! -f "$WEIGHTS" ]; then
+       WGEN=${DATASET}_train_weights.py; [ "$DATASET" = "ptbxl" ] && WGEN=train_uncertainty_weights.py
+       echo "Weights missing, generating with $WGEN"; python "$WGEN"
+     fi
      [ -d "$CK/$FEATDIR" ] || python main.py --job_name $FEATDIR --training_stage feature_extractor --epochs 50 --batch_size 32 --patience 10 $BASE
      FEAT=$(python bestck.py $CK/$FEATDIR)
      python main.py --job_name ${TAG}_joint --training_stage joint --epochs 100 --batch_size 32 --lr 0.0001 --l2 0.00017 --scheduler_type CosineAnnealingLR --patience 10 $BASE $PROTO $WF --pretrained_weights "$FEAT"
