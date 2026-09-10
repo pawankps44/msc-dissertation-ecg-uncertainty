@@ -5,6 +5,8 @@ Code for the MSc dissertation *Uncertainty-Aware Arrhythmia Detection from ECG S
 with **uncertainty estimation, calibration, and abstention**, and validates the result
 across three independent ECG datasets and three random seeds.
 
+<!-- Add links here when available: [Paper] · [Dissertation PDF] · [Project page] -->
+
 ## Overview
 
 Deep learning reads ECGs accurately but usually returns a single prediction with no
@@ -28,9 +30,11 @@ datasets from different hospitals to check that it generalises.
 
 ## Installation
 
-    conda env create -f environment.yml
-    conda activate ecg_env
-    # or, on a cluster: pip install -r requirements_cluster.txt
+```bash
+conda env create -f environment.yml
+conda activate ecg_env
+# or, on a cluster: pip install -r requirements_cluster.txt
+```
 
 ## Data
 
@@ -45,53 +49,93 @@ one cannot affect another's results.
 
 Everything runs through one script, choosing the dataset by argument:
 
-    sbatch run.sh <dataset> <experiment>
-    #   dataset    : ptbxl | chapman | georgia
-    #   experiment : prep | standard | bce | calib
+```bash
+sbatch run.sh <dataset> <experiment>
+#   dataset    : ptbxl | chapman | georgia
+#   experiment : prep | standard | bce | calib
+```
 
-    sbatch run.sh georgia prep       # build the label co-occurrence matrix
-    sbatch run.sh georgia standard   # train the standard pipeline (feat -> joint -> proj -> clf)
-    sbatch run.sh chapman bce        # confidence-weighted (BCE) pipeline
-    sbatch run.sh ptbxl  calib       # calibration + abstention evaluation
+```bash
+sbatch run.sh georgia prep       # build the label co-occurrence matrix
+sbatch run.sh georgia standard   # train the standard pipeline (feat -> joint -> proj -> clf)
+sbatch run.sh chapman bce        # confidence-weighted (BCE) pipeline
+sbatch run.sh ptbxl  calib       # calibration + abstention evaluation
+```
 
 Trained models and metrics land under `experiments/` (`checkpoints/<job>/`,
 `test_results/<job>/`); each job's console log is written to `logs/`.
+
+## Reproducing the reported results
+
+Chapman and Georgia use a **fixed data split** (`--split_seed 42`); the training
+seed (the third `run.sh` argument) varies over 42, 7, 123 and changes only the
+training randomness, not the split. PTB-XL uses the dataset's fixed folds.
+
+Train (the feature extractor is reused across seeds):
+
+```bash
+sbatch run.sh chapman standard 42     # also 7, 123
+sbatch run.sh chapman bce 42          # also 7, 123
+sbatch run.sh georgia standard 42     # also 7, 123
+sbatch run.sh georgia bce 42          # also 7, 123
+```
+
+Evaluate — one script per training seed (run from `src/`):
+
+```bash
+python calibration_eval_chapman.py        # seed 42
+python calibration_eval_chapman_s7.py     # seed 7
+python calibration_eval_chapman_s123.py   # seed 123
+# and the calibration_eval_georgia* equivalents
+```
+
+Notes:
+- PTB-XL checkpoints keep their original names (`cat1_proto_classifier`,
+  `cat1_proto_classifier_wbce`), which `calibration_eval.py` reads.
+- BCE runs need the per-sample weight file (`*_train_weights.npz`); `run.sh <ds> bce`
+  generates it if missing.
+- Fitted temperatures are printed in each eval log; results land in
+  `experiments/test_results/`.
 
 ## Results
 
 Seed-averaged over three seeds. ECE is shown uncalibrated then after temperature scaling
 (lower ECE is better).
 
-| Dataset | Std AUROC | Std ECE -> cal | BCE AUROC | BCE ECE -> cal | ErrDet (BCE) |
+| Dataset | Std AUROC | Std ECE → cal | BCE AUROC | BCE ECE → cal | ErrDet (BCE) |
 |---|---|---|---|---|---|
-| PTB-XL  | 0.870 | 0.071 -> 0.056 | 0.867 | 0.063 -> 0.046 | 0.921 |
-| Chapman | 0.981 | 0.051 -> 0.028 | 0.983 | 0.055 -> 0.033 | 0.937 |
-| Georgia | 0.923 | 0.070 -> 0.053 | 0.925 | 0.068 -> 0.047 | 0.893 |
+| PTB-XL  | 0.870 | 0.071 → 0.056 | 0.867 | 0.063 → 0.046 | 0.921 |
+| Chapman | 0.981 | 0.051 → 0.028 | 0.983 | 0.055 → 0.033 | 0.937 |
+| Georgia | 0.923 | 0.070 → 0.053 | 0.925 | 0.068 → 0.047 | 0.893 |
 
-Temperature scaling reduces calibration error on every dataset with no cost to AUROC;
-confidence-weighting improves error detection, though its own calibration benefit is
-dataset-dependent.
+Temperature scaling reduces calibration error on every dataset with no cost to AUROC.
+Confidence-weighting improves error detection on two of the three datasets (not Georgia),
+and its calibration benefit is also dataset-dependent.
 
 ## Repository structure
 
-    run.sh              # unified runner (one command per dataset)
-    src/                # model and code (main.py selects the dataset via --dataset)
-    jobs/               # SLURM job scripts
-    experiments/        # checkpoints, results, preprocessing (gitignored)
-    logs/               # job console logs (gitignored)
-    archive/            # one-off setup/patch scripts
-    CONTRIBUTIONS.md    # what is my own work vs inherited from ProtoECGNet
+```
+run.sh              # unified runner (one command per dataset)
+src/                # model and code (main.py selects the dataset via --dataset)
+jobs/               # SLURM job scripts
+experiments/        # checkpoints, results, preprocessing (gitignored)
+logs/               # job console logs (gitignored)
+archive/            # one-off setup/patch scripts
+CONTRIBUTIONS.md    # what is my own work vs inherited from ProtoECGNet
+```
 
 ## Citation
 
 If you use this work, please cite the dissertation:
 
-    @mastersthesis{krishnamoorthy2026uncertainty,
-      title  = {Uncertainty-Aware Arrhythmia Detection from ECG Signals},
-      author = {Krishnamoorthy, Pawan Subramanyan},
-      school = {University of Nottingham},
-      year   = {2026}
-    }
+```bibtex
+@mastersthesis{krishnamoorthy2026uncertainty,
+  title  = {Uncertainty-Aware Arrhythmia Detection from ECG Signals},
+  author = {Krishnamoorthy, Pawan Subramanyan},
+  school = {University of Nottingham},
+  year   = {2026}
+}
+```
 
 ## Acknowledgements
 
@@ -100,9 +144,11 @@ architecture and its training procedure are theirs; the uncertainty, calibration
 confidence-weighting, cross-dataset evaluation, and the additional dataset loaders are the
 contribution of this project. See `CONTRIBUTIONS.md`.
 
-    @inproceedings{sethi2025protoecgnet,
-      title     = {ProtoECGNet: Case-Based Interpretable Deep Learning for Multi-Label ECG Classification with Contrastive Learning},
-      author    = {Sethi, Sahil and Chen, David and Statchen, Thomas and Burkhart, Michael C. and Bhandari, Nipun and Ramadan, Bashar and Beaulieu-Jones, Brett},
-      booktitle = {Proceedings of the 10th Machine Learning for Healthcare Conference (MLHC)},
-      series    = {PMLR}, volume = {298}, year = {2025}
-    }
+```bibtex
+@inproceedings{sethi2025protoecgnet,
+  title     = {ProtoECGNet: Case-Based Interpretable Deep Learning for Multi-Label ECG Classification with Contrastive Learning},
+  author    = {Sethi, Sahil and Chen, David and Statchen, Thomas and Burkhart, Michael C. and Bhandari, Nipun and Ramadan, Bashar and Beaulieu-Jones, Brett},
+  booktitle = {Proceedings of the 10th Machine Learning for Healthcare Conference (MLHC)},
+  series    = {PMLR}, volume = {298}, year = {2025}
+}
+```
