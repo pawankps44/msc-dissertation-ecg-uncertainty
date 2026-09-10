@@ -47,7 +47,7 @@ one cannot affect another's results.
 
 ## Usage
 
-Everything runs through one script, choosing the dataset by argument:
+Most steps run through one script, choosing the dataset by argument:
 
 ```bash
 sbatch run.sh <dataset> <experiment>
@@ -96,6 +96,9 @@ Notes:
   generates it if missing.
 - Fitted temperatures are printed in each eval log; results land in
   `experiments/test_results/`.
+- The unified runner covers training and the seed-42 calibration; the seed-7/123
+  calibration uses the dedicated `*_s7`/`*_s123` scripts above, so the runner alone
+  does not reproduce every reported configuration.
 
 ## Results
 
