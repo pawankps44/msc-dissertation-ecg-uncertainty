@@ -38,7 +38,7 @@ conda activate ecg_env
 
 ## Data
 
-- **PTB-XL** — https://physionet.org/content/ptb-xl/
+- **PTB-XL**: https://physionet.org/content/ptb-xl/
 - **Chapman-Shaoxing** and the **PhysioNet/Computing in Cardiology 2021 (Georgia)** data
   are publicly available on PhysioNet.
 
@@ -80,7 +80,7 @@ sbatch run.sh georgia standard 42     # also 7, 123
 sbatch run.sh georgia bce 42          # also 7, 123
 ```
 
-Evaluate — one script per training seed (run from `src/`):
+Evaluate, one script per training seed (run from `src/`):
 
 ```bash
 python calibration_eval_chapman.py        # seed 42
@@ -90,8 +90,10 @@ python calibration_eval_chapman_s123.py   # seed 123
 ```
 
 Notes:
-- PTB-XL checkpoints keep their original names (`cat1_proto_classifier`,
-  `cat1_proto_classifier_wbce`), which `calibration_eval.py` reads.
+- The PTB-XL calibration scripts target the historical checkpoint directories
+  (`cat1_proto_classifier`, `cat1_proto_classifier_wbce`), which `calibration_eval.py`
+  reads. A fresh PTB-XL training run through the unified runner produces different
+  directory names and needs explicit path configuration before that evaluator finds it.
 - BCE runs need the per-sample weight file (`*_train_weights.npz`); `run.sh <ds> bce`
   generates it if missing.
 - Fitted temperatures are printed in each eval log; results land in
