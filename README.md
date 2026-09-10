@@ -65,8 +65,8 @@ Seed-averaged over three seeds. ECE is shown uncalibrated then after temperature
 | Dataset | Std AUROC | Std ECE -> cal | BCE AUROC | BCE ECE -> cal | ErrDet (BCE) |
 |---|---|---|---|---|---|
 | PTB-XL  | 0.870 | 0.071 -> 0.056 | 0.867 | 0.063 -> 0.046 | 0.921 |
-| Chapman | 0.981 | 0.043 -> 0.026 | 0.984 | 0.050 -> 0.033 | 0.935 |
-| Georgia | 0.953 | 0.071 -> 0.052 | 0.933 | 0.039 -> 0.018 | 0.913 |
+| Chapman | 0.962 | 0.045 -> 0.032 | 0.969 | 0.052 -> 0.040 | 0.926 |
+| Georgia | 0.943 | 0.071 -> 0.056 | 0.932 | 0.038 -> 0.025 | 0.905 |
 
 Temperature scaling reduces calibration error on every dataset with no cost to AUROC;
 confidence-weighting improves error detection, though its own calibration benefit is
