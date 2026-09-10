@@ -71,6 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--standardize', type=str2bool, default=False, help='Whether to standardize input ECG signals')
     parser.add_argument('--remove_baseline', type=str2bool, default=True, help='Whether to remove baseline wander from input ECG signals (high-pass filter)')
     parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
+    parser.add_argument('--split_seed', type=int, default=42, help='Fixed data-split seed for Chapman/Georgia; separate from --seed (training randomness)')
     parser.add_argument('--num_workers', type=int, default=0, help='Number of workers for dataloader')
     parser.add_argument('--sample_weights_path', type=str, default=None)
     parser.add_argument('--weight_clst', type=str2bool, default=False)
@@ -136,10 +137,10 @@ if __name__ == '__main__':
 
         if args.dataset == 'chapman':
             from ecg_utils_chapman import get_chapman_dataloaders
-            train_loader, val_loader, test_loader, class_weights = get_chapman_dataloaders(batch_size=args.batch_size, work_num=args.num_workers, return_sample_ids=return_sample_ids, remove_baseline=args.remove_baseline, seed=args.seed)
+            train_loader, val_loader, test_loader, class_weights = get_chapman_dataloaders(batch_size=args.batch_size, work_num=args.num_workers, return_sample_ids=return_sample_ids, remove_baseline=args.remove_baseline, seed=args.split_seed)
         elif args.dataset == 'georgia':
             from ecg_utils_georgia import get_georgia_dataloaders
-            train_loader, val_loader, test_loader, class_weights = get_georgia_dataloaders(batch_size=args.batch_size, work_num=args.num_workers, return_sample_ids=return_sample_ids, remove_baseline=args.remove_baseline, seed=args.seed)
+            train_loader, val_loader, test_loader, class_weights = get_georgia_dataloaders(batch_size=args.batch_size, work_num=args.num_workers, return_sample_ids=return_sample_ids, remove_baseline=args.remove_baseline, seed=args.split_seed)
         else:
             train_loader, val_loader, test_loader, class_weights = get_dataloaders(
             batch_size=args.batch_size, 
