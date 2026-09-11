@@ -37,7 +37,8 @@ sbatch run.sh ptbxl  calib       # calibration + abstention evaluation
 
 ## Results
 
-Seed-averaged macro AUROC and ECE (uncalibrated then temperature-scaled):
+Standard-model results averaged over three training seeds; ECE is reported before and
+after temperature scaling.
 
 | Dataset | AUROC | ECE -> cal |
 |---|---|---|
@@ -46,6 +47,9 @@ Seed-averaged macro AUROC and ECE (uncalibrated then temperature-scaled):
 | Georgia | 0.92 | 0.070 -> 0.053 |
 
 Temperature scaling lowers calibration error on every dataset at no cost to AUROC.
+
+> Note: some PTB-XL run directories carry historical checkpoint names from earlier
+> experiments; the unified runner above produces the same results under its own naming.
 
 ## Citation
 
