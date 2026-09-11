@@ -1,9 +1,3 @@
-"""
-Prototype class-consistency (purity) for standard vs weighted models.
-For each prototype (assigned to class c), take the top-K test ECGs it activates
-most, and measure the fraction that actually carry class c. Mean over prototypes
-= how 'clean' / class-consistent the prototype set is.
-"""
 import os, glob, re
 import numpy as np, pandas as pd
 import torch

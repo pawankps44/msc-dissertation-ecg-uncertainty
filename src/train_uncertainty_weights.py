@@ -1,9 +1,3 @@
-"""
-Step 1 of uncertainty-weighted training.
-Runs MC Dropout over the TRAINING set with the standard prototype model,
-gets one uncertainty value per training ECG (keyed by ecg_id), and turns it
-into weight = 1 - normalized_uncertainty. Saves a lookup the training will use.
-"""
 import os, glob, re
 import numpy as np
 import torch, torch.nn as nn

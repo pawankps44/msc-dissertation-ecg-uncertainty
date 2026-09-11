@@ -1,12 +1,3 @@
-"""
-Prototype-margin uncertainty vs MC Dropout, on the SAME trained prototype model.
-Reads the cat1_proto_classifier checkpoint, runs the test set, and computes:
-  - prototype-margin uncertainty = (best competing-class sim) - (best own-class sim)
-  - MC Dropout uncertainty       = std over 30 dropout-on passes
-Then compares them on: error-detection AUROC, abstention curves, and correlation.
-Outputs table + plots to experiments/test_results/proto_uncertainty/.
-Uses only numpy, pandas, torch, matplotlib, sklearn (no scipy).
-"""
 import os, glob, re
 import numpy as np, pandas as pd
 import torch, torch.nn as nn
@@ -59,7 +50,7 @@ def metrics_on(p, y):
     return auroc, fmax(p, y), acc
 
 
-# ---- load model ----
+
 ckpt = best_ckpt(CKPT_DIR)
 print("Using checkpoint:", ckpt)
 lm = load_label_mappings(custom_groups=True, prototype_category=1)
@@ -77,7 +68,7 @@ model.eval()
 proto_identity = model.prototype_class_identity.detach().cpu().numpy()  # (P, C)
 print("prototype_class_identity:", proto_identity.shape)
 
-# ---- deterministic pass: prototype activations, probs, labels ----
+# deterministic pass: prototype activations, probs, labels
 acts, probs, labels = [], [], []
 with torch.no_grad():
     for x, y in test_loader:
@@ -99,7 +90,7 @@ for c in range(num_classes):
 margin = support - competition
 unc_margin = -np.abs(margin)            # small |margin| = near boundary = most uncertain
 
-# ---- MC Dropout on the SAME model ----
+# MC Dropout on the SAME model 
 def enable_mc_dropout(m):
     for mod in m.modules():
         if isinstance(mod, nn.Dropout):
@@ -118,7 +109,7 @@ mc = np.stack(mc)
 mc_mean, mc_std = mc.mean(0), mc.std(0)
 unc_mc = mc_std
 
-# ---- predictions / errors (from deterministic probs) ----
+# predictions / errors (from deterministic probs) 
 pred = (probs > 0.5).astype(int)
 error = (pred != labels).astype(int)
 e = error.ravel()
@@ -154,7 +145,7 @@ df = pd.DataFrame(rows)
 df.to_csv(os.path.join(OUT, "proto_vs_mc_selective.csv"), index=False)
 print("\n" + df.to_string(index=False))
 
-# ---- plots ----
+
 plt.figure(figsize=(7, 5))
 plt.plot(df.coverage, df.AUROC_margin, "o-", label="AUROC (prototype-margin)")
 plt.plot(df.coverage, df.AUROC_mc, "s-", label="AUROC (MC dropout)")

@@ -1,4 +1,5 @@
-"""MC Dropout inference for the Branch-1 (arrhythmia) feature-extractor."""
+#MC Dropout inference for the Branch-1 (arrhythmia) feature extractor
+
 import os, re, glob, argparse
 import numpy as np, torch, torch.nn as nn, pandas as pd
 from sklearn.metrics import roc_auc_score

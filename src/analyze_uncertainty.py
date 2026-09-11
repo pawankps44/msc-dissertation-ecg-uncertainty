@@ -1,52 +1,27 @@
-# =====================================================================
-
-#  analyze_uncertainty.py
-
-#  Goal: check whether MC Dropout's uncertainty is actually USEFUL.
-
-#  We answer 3 questions the professor asked:
-
-#    1) Is the model well-calibrated? (does "0.8" mean 80%?)  -> ECE/Brier
-
-#    2) Are WRONG predictions more uncertain than right ones?
-
-#    3) If we abstain on the most uncertain cases, does accuracy go up?
-
-#  It only reads files we already saved -> no GPU, runs in seconds.
-
-# =====================================================================
 
 import os, glob
 
-import numpy as np                 # numerical arrays / math
+import numpy as np                 
 
-import pandas as pd                # reading the saved CSV tables
+import pandas as pd                
 
-import matplotlib                  # plotting
+import matplotlib                  
 
-matplotlib.use("Agg")             # "Agg" = save plots to file, no screen needed
+matplotlib.use("Agg")             
 
 import matplotlib.pyplot as plt
 
 from sklearn.metrics import roc_auc_score   # standard AUROC metric
 
-# ---- WHERE THE SAVED FILES ARE ----
 
-TEST_DIR = os.path.expanduser("~/protoecgnet/experiments/test_results")          # folder with all test outputs
+TEST_DIR = os.path.expanduser("~/protoecgnet/experiments/test_results")          
 
-NPZ      = os.path.join(TEST_DIR, "mc_dropout", "mc_dropout_outputs.npz")         # MC Dropout results (mean, std, labels)
+NPZ      = os.path.join(TEST_DIR, "mc_dropout", "mc_dropout_outputs.npz")        
 
-OUT      = os.path.join(TEST_DIR, "uncertainty_analysis")                         # where we save plots/tables
+OUT      = os.path.join(TEST_DIR, "uncertainty_analysis")                        
 
-os.makedirs(OUT, exist_ok=True)                                                   # create that folder if missing
+os.makedirs(OUT, exist_ok=True)                                                  
 
-# ============ HELPER 1: load a saved test-prediction CSV ============
-
-# Each model (baseline, focal) saved a CSV with columns:
-
-#   Label_<class>  = the true 0/1 answer
-
-#   Prob_<class>   = the model's predicted probability
 
 def load_csv(job):
 
@@ -56,21 +31,14 @@ def load_csv(job):
 
         raise FileNotFoundError(f"No test CSV for {job}")
 
-    df = pd.read_csv(files[-1])                                                   # read the latest version file
+    df = pd.read_csv(files[-1])                                                   
 
-    lab  = df[[c for c in df.columns if c.startswith("Label_")]].values.astype(float)   # all the true labels
+    lab  = df[[c for c in df.columns if c.startswith("Label_")]].values.astype(float)   
 
-    prob = df[[c for c in df.columns if c.startswith("Prob_")]].values.astype(float)    # all the predicted probs
+    prob = df[[c for c in df.columns if c.startswith("Prob_")]].values.astype(float)    
 
-    return prob, lab                                                             # shapes: (num_ecgs, 16 classes)
+    return prob, lab                                                             
 
-# ============ HELPER 2: calibration metrics (ECE & Brier) ============
-
-# ECE  = Expected Calibration Error: average gap between predicted confidence
-
-#        and how often it's actually right. Lower = better calibrated.
-
-# Brier= mean squared error between probability and the true 0/1. Lower = better.
 
 def ece_brier(probs, labels, n_bins=10):
 
@@ -82,27 +50,19 @@ def ece_brier(probs, labels, n_bins=10):
 
     ece, N = 0.0, len(p)
 
-    for i in range(n_bins):                        # for each confidence bin...
+    for i in range(n_bins):                        
 
         lo, hi = edges[i], edges[i + 1]
 
-        m = (p >= lo) & (p < hi) if i < n_bins - 1 else (p >= lo) & (p <= hi)    # which predictions fall in this bin
+        m = (p >= lo) & (p < hi) if i < n_bins - 1 else (p >= lo) & (p <= hi)    
 
         if m.sum() > 0:
 
-            # gap between average confidence and actual accuracy in this bin,
-
-            # weighted by how many predictions are in the bin
 
             ece += (m.sum() / N) * abs(p[m].mean() - y[m].mean())
 
     return float(ece), brier
 
-# ============ HELPER 3: macro AUROC (overall accuracy/ranking) ============
-
-# AUROC per class, then averaged. Skips classes with no positive cases
-
-# (you can't compute AUROC if a class never appears).
 
 def macro_auc(probs, labels):
 
@@ -112,9 +72,6 @@ def macro_auc(probs, labels):
 
     return float(np.mean(aucs)) if aucs else float("nan")
 
-# ============ HELPER 4: Fmax (best F1 across all thresholds) ============
-
-# Tries many cut-off thresholds and keeps the best F1 score (precision/recall balance).
 
 def fmax(probs, labels):
 
@@ -138,9 +95,6 @@ def fmax(probs, labels):
 
     return float(best)
 
-# ============ HELPER 5: points for the reliability plot ============
-
-# For each confidence bin: x = average predicted prob, y = actual fraction correct.
 
 # A perfectly calibrated model sits on the diagonal (x == y).
 
@@ -162,31 +116,16 @@ def reliability_points(probs, labels, n_bins=10):
 
     return np.array(xs), np.array(ys)
 
-# =====================================================================
 
-#  LOAD THE THREE MODELS' OUTPUTS
 
-# =====================================================================
+prob_base,  y_base  = load_csv("cat1_feat_baseline")   
 
-prob_base,  y_base  = load_csv("cat1_feat_baseline")   # plain BCE baseline
-
-prob_focal, y_focal = load_csv("cat1_feat_focal")      # focal-loss version
+prob_focal, y_focal = load_csv("cat1_feat_focal")      
 
 mc = np.load(NPZ)                                       # MC Dropout results
 
 prob_mc, std_mc, y_mc = mc["mean"], mc["std"], mc["labels"].astype(float)
 
-# prob_mc = average prediction over 30 passes
-
-# std_mc  = spread over the 30 passes = the UNCERTAINTY (per ecg, per class)
-
-# y_mc    = true labels
-
-# =====================================================================
-
-#  ANALYSIS 1: CALIBRATION — is the confidence honest?
-
-# =====================================================================
 
 print("\n=== 1) CALIBRATION (ECE / Brier) ===")
 
@@ -208,9 +147,8 @@ for name, p, y in [("Baseline (BCE)", prob_base, y_base),
 
 pd.DataFrame(rows, columns=["model","AUROC","ECE","Brier"]).to_csv(
 
-    os.path.join(OUT, "calibration_table.csv"), index=False)            # save the table
+    os.path.join(OUT, "calibration_table.csv"), index=False)           
 
-# --- reliability diagram (3 curves + the perfect diagonal) ---
 
 plt.figure(figsize=(6, 6))
 
@@ -232,11 +170,7 @@ plt.title("Reliability diagram"); plt.legend(); plt.tight_layout()
 
 plt.savefig(os.path.join(OUT, "reliability.png"), dpi=140); plt.close()
 
-# =====================================================================
 
-#  ANALYSIS 2: do WRONG predictions have higher uncertainty?
-
-# =====================================================================
 
 print("\n=== 2) DO ERRORS HAVE HIGHER UNCERTAINTY? ===")
 
@@ -278,7 +212,7 @@ wrong = unc.ravel()[err.ravel() == 1]              # uncertainty of all WRONG pr
 
 print(f"  CORRECT mean unc={corr.mean():.4f}   INCORRECT mean unc={wrong.mean():.4f}")
 
-# --- box plot of uncertainty for TP/TN/FP/FN ---
+# box plot of uncertainty for TP/TN/FP/FN
 
 plt.figure(figsize=(7, 5))
 
@@ -292,11 +226,7 @@ plt.title("Uncertainty by prediction type (errors = FP, FN)")
 
 plt.tight_layout(); plt.savefig(os.path.join(OUT, "uncertainty_vs_error.png"), dpi=140); plt.close()
 
-# =====================================================================
 
-#  ANALYSIS 3: ABSTENTION — remove the most uncertain cases
-
-# =====================================================================
 
 print("\n=== 3) ABSTENTION (remove most uncertain) ===")
 
@@ -322,7 +252,7 @@ ab = pd.DataFrame(abst_rows, columns=["coverage_%","abstain_%","AUROC","Fmax"])
 
 ab.to_csv(os.path.join(OUT, "abstention_table.csv"), index=False)
 
-# --- abstention curve: performance should RISE as we keep fewer, more-confident cases ---
+#  abstention curve: performance should RISE as we keep fewer, more-confident cases 
 
 plt.figure(figsize=(7, 5))
 

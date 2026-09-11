@@ -38,7 +38,7 @@ case "$EXP" in
   calib) python "$CALIB" ;;
   standard|bce)
      TAG=${DATASET}_${EXP}${SUF}
-     WF=""; [ "$EXP" = "bce" ] && WF="--sample_weights_path $WEIGHTS --weight_bce True"
+     WF=""; [ "$EXP" = "bce" ] && WF="--sample_weights_path $WEIGHTS --weight_bce True" 
      if [ "$EXP" = "bce" ] && [ ! -f "$WEIGHTS" ]; then
        WGEN=${DATASET}_train_weights.py; [ "$DATASET" = "ptbxl" ] && WGEN=train_uncertainty_weights.py
        echo "Weights missing, generating with $WGEN"; python "$WGEN"
