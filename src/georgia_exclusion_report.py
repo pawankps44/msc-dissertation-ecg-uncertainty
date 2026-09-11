@@ -1,13 +1,4 @@
-"""
-D02 report: Georgia exclusion flow, class support, native sampling rates, and
-the shared rhythm label spaces. Read-only; just prints counts for the
-dissertation (Section 3.1). Run from ~/protoecgnet/src:
 
-    python georgia_exclusion_report.py
-
-The exclusion logic here mirrors get_georgia_dataloaders() exactly, so the KEPT
-count should equal the number of records the pipeline actually used.
-"""
 import os, glob, collections
 import numpy as np, wfdb
 from ecg_utils_georgia import DATA_DIR, RHYTHM, CODES, GEORGIA_CLASSES, CODE2IDX, _dx

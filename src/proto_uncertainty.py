@@ -80,7 +80,7 @@ acts = np.concatenate(acts); probs = np.concatenate(probs)
 labels = np.concatenate(labels).astype(float)
 print("acts", acts.shape, "probs", probs.shape, "labels", labels.shape)
 
-# ---- prototype-margin uncertainty ----
+
 same = proto_identity.T  # (C, P): row c marks prototypes of class c
 support = np.zeros_like(probs); competition = np.zeros_like(probs)
 for c in range(num_classes):

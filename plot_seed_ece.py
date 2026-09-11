@@ -1,8 +1,4 @@
-"""
-per-seed calibration error (ECE) for PTB-XL and Chapman,
-rebuilt from the nine calibration CSVs so it matches Table 5.5 exactly.
 
-"""
 import glob, os
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")

@@ -4,7 +4,7 @@ def read(f): return open(os.path.join(SRC, f)).read()
 def write(f, s): open(os.path.join(SRC, f), "w").write(s)
 def ind_of(l): return l[:len(l) - len(l.lstrip())]
 
-# ---------------- proto_models1D.py ----------------
+
 lines = read("proto_models1D.py").split("\n"); out = []; c_clst = c_sep = 0
 for l in lines:
     s = l.strip()
@@ -27,7 +27,7 @@ for l in lines:
         out.append(l)
 write("proto_models1D.py", "\n".join(out)); print("proto  clst=%d sep=%d" % (c_clst, c_sep))
 
-# ---------------- training_functions.py ----------------
+
 lines = read("training_functions.py").split("\n"); out = []; cur = None; c_init = c_meth = 0
 for l in lines:
     s = l.strip()
@@ -56,7 +56,7 @@ for l in lines:
     out.append(l)
 write("training_functions.py", "\n".join(out)); print("trainer init=%d methods=%d" % (c_init, c_meth))
 
-# ---------------- main.py (return_sample_ids) ----------------
+
 lines = read("main.py").split("\n"); out = []; c = 0
 for l in lines:
     if 'if args.training_stage == "projection":' in l and "sample_weights_path" not in l:

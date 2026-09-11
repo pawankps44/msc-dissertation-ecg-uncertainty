@@ -1,9 +1,3 @@
-"""
-Figure 5.7 replacement: seed-averaged calibration error (ECE), uncalibrated vs
-temperature-scaled, for all three datasets. Reads the nine calibration CSVs the
-eval batch produced, so the figure is tied to the actual outputs.
-
-"""
 import glob, os, collections
 import numpy as np, pandas as pd
 import matplotlib; matplotlib.use("Agg")

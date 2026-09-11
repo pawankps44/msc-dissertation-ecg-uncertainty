@@ -1,10 +1,4 @@
-"""
-Variant 4: projection restricted to low-uncertainty training ECGs.
-Starts from the STANDARD joint model, grounds each prototype onto the best-matching
-training ECG of its class *among low-uncertainty examples only*. Falls back to any
-class example if none qualify (keeps rare-class prototypes valid). Saves a projected
-.pth the classifier stage can load, same format as normal projection.
-"""
+
 import os, glob, re, json
 import numpy as np, torch
 from ecg_utils import get_dataloaders, load_label_mappings

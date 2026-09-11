@@ -6,6 +6,10 @@ classifier with Monte Carlo Dropout uncertainty, an interpretable prototype-marg
 temperature-scaling calibration, and abstention, evaluated on PTB-XL, Chapman-Shaoxing
 and Georgia.
 
+## Repository
+
+[GitHub: msc-dissertation-ecg-uncertainty](https://github.com/pawankps44/msc-dissertation-ecg-uncertainty)
+
 ![Architecture](architecture.svg)
 
 ## Setup

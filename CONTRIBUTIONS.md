@@ -58,7 +58,7 @@ dataset loaders.
   `src/label_co.py`, `src/case_explanations.ipynb` - inherited from ProtoECGNet;
   not central to this project's contribution.
 
-## The changes that are genuinely mine (short version for the viva)
+## The changes that are genuinely mine 
 
 1. Made MC Dropout possible by adding a dropout layer to the backbone.
 2. Made the training loss support per-sample confidence weighting, which enabled the

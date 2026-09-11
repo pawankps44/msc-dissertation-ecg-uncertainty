@@ -1,8 +1,3 @@
-"""
-Full evaluation of standard vs weighted prototype models.
-For each model: AUROC, Fmax, ECE, Brier (from a clean test pass) and
-error-detection AUROC + selective prediction (from 30 MC-Dropout passes).
-"""
 import os, glob, re
 import numpy as np, pandas as pd
 import torch, torch.nn as nn

@@ -3,10 +3,6 @@
 #SBATCH -c4 --mem=16G -G1
 #SBATCH -p general
 #SBATCH -o %x_%j.out
-# Unified runner: sbatch run.sh <dataset> <experiment>
-#   dataset    : ptbxl | chapman | georgia
-#   experiment : prep | standard | bce | calib
-#   e.g.  sbatch run.sh georgia standard   |   sbatch run.sh ptbxl calib
 set -e
 source ~/ecg_venv/bin/activate
 cd ~/protoecgnet/src
@@ -24,7 +20,7 @@ case "$DATASET" in
   georgia) DS="--dataset georgia --label_set georgia --custom_groups True" ;;
   *) echo "Unknown dataset '$DATASET' (use ptbxl|chapman|georgia)"; exit 1 ;;
 esac
-# per-dataset helper names (PTB-XL keeps its original names)
+
 PREP=${DATASET}_label_co.py;          [ "$DATASET" = "ptbxl" ] && PREP=label_co.py
 CALIB=calibration_eval_${DATASET}.py; [ "$DATASET" = "ptbxl" ] && CALIB=calibration_eval.py
 FEATDIR=${DATASET}_feat;              [ "$DATASET" = "ptbxl" ] && FEATDIR=cat1_feat_baseline

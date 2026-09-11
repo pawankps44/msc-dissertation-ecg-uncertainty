@@ -1,9 +1,4 @@
-"""
-Four-way comparison: standard vs BCE-weighted, each with and without post-hoc
-temperature scaling on the MC Dropout mean probabilities (temperature fit on the
-validation set). Reports AUROC, Fmax, ECE, Brier, error-detection AUROC, and
-selective prediction at 95/90/80/70% coverage, identically for all four.
-"""
+
 import os, glob, re
 import numpy as np, pandas as pd
 import torch, torch.nn as nn
